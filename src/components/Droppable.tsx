@@ -1,12 +1,17 @@
 import { useDroppable } from "@dnd-kit/core";
+import { DraggableType } from "./Draggable";
 
-export type DroppableType = {
-  id: string;
+type DroppableType = DraggableType & {
   title: string | null;
-  children: (JSX.Element | undefined)[] | JSX.Element;
+  handleAddTask: () => void;
 };
 
-export function Droppable({ id, title, children }: DroppableType) {
+export function Droppable({
+  id,
+  title,
+  children,
+  handleAddTask,
+}: DroppableType) {
   const { isOver, setNodeRef } = useDroppable({
     id: id,
   });
@@ -27,6 +32,8 @@ export function Droppable({ id, title, children }: DroppableType) {
       />
 
       {children}
+
+      <button onClick={handleAddTask}>Add task</button>
     </div>
   );
 }

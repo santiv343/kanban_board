@@ -11,7 +11,7 @@ type ContainerType = {
 type ItemType = {
   parent: string;
   id: string;
-  title: string;
+  title: string | null;
 };
 
 export default function Board() {
@@ -23,17 +23,17 @@ export default function Board() {
   const [items, setItems] = useState<ItemType[]>([
     {
       parent: "A",
-      id: "draggable",
+      id: crypto.randomUUID(),
       title: "Drag me",
     },
     {
       parent: "B",
-      id: "draggable2",
+      id: crypto.randomUUID(),
       title: "Drag me 2",
     },
     {
       parent: "C",
-      id: "draggable3",
+      id: crypto.randomUUID(),
       title: "Drag me 3",
     },
   ]);
@@ -45,13 +45,21 @@ export default function Board() {
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="grid grid-flow-col w-full space-x-8">
-        {containers.map(({ id, title }) => (
-          <Droppable title={title} key={id} id={id}>
+        {containers.map(({ id: parentId, title }) => (
+          <Droppable
+            handleAddTask={() => handleAddTask(parentId)}
+            title={title}
+            key={parentId}
+            id={parentId}
+          >
             {items.map((item) => {
-              if (item.parent === id) {
+              if (item.parent === parentId) {
                 return (
                   <Draggable id={item.id}>
-                    <p>{item.title}</p>
+                    <div className="flex flex-col">
+                      <p className="text-[8px] text-gray-500">{item.id}</p>
+                      <p>{item.title}</p>
+                    </div>
                   </Draggable>
                 );
               }
@@ -67,6 +75,15 @@ export default function Board() {
       </div>
     </DndContext>
   );
+
+  function handleAddTask(parentId: string) {
+    setItems((items) => {
+      return [
+        ...items,
+        { id: crypto.randomUUID(), parent: parentId, title: null },
+      ];
+    });
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { over, active } = event;

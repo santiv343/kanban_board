@@ -1,7 +1,9 @@
 import { useDraggable } from "@dnd-kit/core";
-import { DroppableType } from "./Droppable";
 
-type DraggableType = Omit<DroppableType, 'title'>
+export type DraggableType = {
+  id: string;
+  children: (JSX.Element | undefined)[] | JSX.Element;
+};
 
 export function Draggable({ id, children }: DraggableType) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({

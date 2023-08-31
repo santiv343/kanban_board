@@ -47,7 +47,7 @@ export function Column({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex flex-col space-y-2 min-h-[200px] h-fit min-w-[300px] max-w-[400px] bg-slate-400 px-2 py-2 rounded-lg ${
+      className={`flex flex-col  min-h-[200px] h-fit min-w-[300px] max-w-[400px] bg-slate-400 rounded-lg ${
         isOver ? "border-2 border-slate-200" : ""
       } ${isActive ? "shadow-2xl" : ""} ${isDragging ? "opacity-50" : ""}`}
     >
@@ -60,7 +60,7 @@ export function Column({
       <div
         {...attributes}
         {...listeners}
-        className="flex justify-between items-center bg-slate-500 rounded-lg p-4"
+        className="flex justify-between items-center bg-slate-500  rounded-t-lg p-4"
       >
         <input
           onChange={(e) => handleColumnNameChange(e.target.value, id)}
@@ -73,15 +73,18 @@ export function Column({
         </button>
       </div>
 
-      {children}
+      <div className="flex flex-col space-y-2 justify-center items-center px-2 py-2 ">
+        {children}
 
-      <button
-        onClick={handleAddTask}
-        className="flex justify-center items-center space-x-2 h-fit bg-slate-400 py-4 rounded-lg w-fit"
-      >
-        <AddIcon className="h-6 w-6 fill-none stroke-black stroke-1" />
-        <p>Add task</p>
-      </button>
+        <button
+          onClick={handleAddTask}
+          className="flex justify-center items-center space-x-2 h-fit bg-slate-400 py-4 rounded-lg w-fit"
+        >
+          <AddIcon className="h-6 w-6 fill-none stroke-black stroke-1" />
+          <p>Add task</p>
+        </button>
+      </div>
+
       <p className="text-[8px] text-gray-500 mt-auto">{id}</p>
     </div>
   );

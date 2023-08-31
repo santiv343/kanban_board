@@ -66,6 +66,7 @@ export default function Board() {
         <SortableContext items={containersId}>
           {containers?.map((container) => (
             <Column
+              handleColumnDelete={handleColumnDelete}
               handleAddTask={() => handleAddTask(container.id)}
               handleColumnNameChange={handleColumnNameChange}
               key={container.id}
@@ -94,6 +95,7 @@ export default function Board() {
           <DragOverlay>
             {activeContainer ? (
               <Column
+                handleColumnDelete={handleColumnDelete}
                 handleAddTask={() => handleAddTask(activeContainer.id)}
                 handleColumnNameChange={handleColumnNameChange}
                 key={activeContainer.id}
@@ -142,6 +144,16 @@ export default function Board() {
     </DndContext>
   );
 
+  function handleColumnDelete(containerId: string) {
+    console.log({ containerId });
+    setContainers((containers) => {
+      return containers.filter((container) => container.id !== containerId);
+    });
+    setItems((items) => {
+      return items.filter((items) => items.parent !== containerId);
+    });
+  }
+
   function handleColumnNameChange(newName: string, containerId: string) {
     setContainers((containers) => {
       const newContainers = structuredClone(containers);
@@ -163,7 +175,6 @@ export default function Board() {
   }
 
   function handleAddTask(parentId: string) {
-    console.log({ parentId });
     setItems((items) => {
       return [
         ...items,
@@ -174,6 +185,9 @@ export default function Board() {
 
   function handleDragEnd(event: DragEndEvent) {
     const { over, active } = event;
+
+    console.log({ over, active });
+    if (!over) return;
 
     if (active.data.current?.type === "Column") {
       setContainers((containers) => {
@@ -197,20 +211,18 @@ export default function Board() {
 
         return newContainers;
       });
-    } else {
-      if (over) {
-        setItems((oldItems) => {
-          const newItems = structuredClone(oldItems);
+    } else if (active.data.current?.type === "Item") {
+      setItems((oldItems) => {
+        const newItems = structuredClone(oldItems);
 
-          const activeItemIndex = oldItems.findIndex(
-            (item) => item.id === active.id
-          );
+        const activeItemIndex = oldItems.findIndex(
+          (item) => item.id === active.id
+        );
 
-          newItems[activeItemIndex].parent = over.id as string;
+        newItems[activeItemIndex].parent = over.id as string;
 
-          return newItems;
-        });
-      }
+        return newItems;
+      });
     }
   }
 

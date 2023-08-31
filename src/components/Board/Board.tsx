@@ -1,15 +1,22 @@
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
-import { useState } from "react";
-import { Draggable } from "./Draggable";
-import { Droppable } from "./Droppable";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import { useMemo, useState } from "react";
+import { ColumnItem } from "./ColumnItem";
+import { Column } from "./Column";
 import AddIcon from "../Icons/AddIcon";
+import { SortableContext } from "@dnd-kit/sortable";
+import { createPortal } from "react-dom";
 
-type ContainerType = {
+export type ContainerType = {
   id: string;
   title: string | null;
 };
 
-type ItemType = {
+export type ItemType = {
   parent: string;
   id: string;
   title: string | null;
@@ -41,39 +48,94 @@ type ItemType = {
 
 export default function Board() {
   const [containers, setContainers] = useState<ContainerType[]>([]);
+  const containersId = useMemo(
+    () => containers.map((containers) => containers.id),
+    [containers]
+  );
   const [items, setItems] = useState<ItemType[]>([]);
+  const itemsId = useMemo(() => items.map((items) => items.id), [items]);
+
+  const [activeContainer, setActiveContainer] = useState<ContainerType | null>(
+    null
+  );
+  const [activeItem, setActiveItem] = useState<ItemType | null>(null);
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-flow-col w-full space-x-8">
-        {containers?.map(({ id: parentId, title }) => (
-          <Droppable
-            handleAddTask={() => handleAddTask(parentId)}
-            handleColumnNameChange={handleColumnNameChange}
-            title={title}
-            key={parentId}
-            id={parentId}
-          >
-            {items &&
-              items?.map((item) => {
-                if (item.parent === parentId) {
-                  return (
-                    <Draggable id={item.id}>
-                      <div className="flex flex-col">
-                        <p className="text-[8px] text-gray-500">{item.id}</p>
-                        <p>{item.title}</p>
-                      </div>
-                    </Draggable>
-                  );
-                }
-              })}
-          </Droppable>
-        ))}
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="grid grid-flow-col space-x-8">
+        <SortableContext items={containersId}>
+          {containers?.map((container) => (
+            <Column
+              handleAddTask={() => handleAddTask(container.id)}
+              handleColumnNameChange={handleColumnNameChange}
+              key={container.id}
+              container={container}
+            >
+              {items &&
+                items?.map((item) => {
+                  if (item.parent === container.id) {
+                    return (
+                      <ColumnItem item={item}>
+                        <div className="flex flex-col">
+                          <p>{item.title}</p>
+                          <p className="text-[8px] text-gray-500 mt-auto">
+                            {item.id}
+                          </p>
+                        </div>
+                      </ColumnItem>
+                    );
+                  }
+                })}
+            </Column>
+          ))}
+        </SortableContext>
+
+        {createPortal(
+          <DragOverlay>
+            {activeContainer ? (
+              <Column
+                handleAddTask={() => handleAddTask(activeContainer.id)}
+                handleColumnNameChange={handleColumnNameChange}
+                key={activeContainer.id}
+                container={activeContainer}
+              >
+                <SortableContext items={itemsId}>
+                  {items &&
+                    items?.map((item) => {
+                      if (item.parent === activeContainer.id) {
+                        return (
+                          <ColumnItem item={item}>
+                            <div className="flex flex-col">
+                              <p>{item.title}</p>
+                              <p className="text-[8px] text-gray-500 mt-auto">
+                                {item.id}
+                              </p>
+                            </div>
+                          </ColumnItem>
+                        );
+                      }
+                    })}
+                </SortableContext>
+              </Column>
+            ) : activeItem ? (
+              <ColumnItem item={activeItem}>
+                <div className="flex flex-col">
+                  <p>{activeItem.title}</p>
+                  <p className="text-[8px] text-gray-500 mt-auto">
+                    {activeItem.id}
+                  </p>
+                </div>
+              </ColumnItem>
+            ) : null}
+          </DragOverlay>,
+          document.body
+        )}
+
         <button
           onClick={handleAddColumn}
-          className="flex space-x-2 h-fit bg-slate-400 p-4 rounded-lg w-fit"
+          className="flex justify-center items-center space-x-2 h-fit bg-slate-400 p-4 rounded-lg w-fit"
         >
-          <AddIcon className="h-6 w-6 fill-none stroke-black stroke-1" />
+          <AddIcon className="h-8 w-8 fill-none stroke-black stroke-1" />
           <p>Add column</p>
         </button>
       </div>
@@ -101,6 +163,7 @@ export default function Board() {
   }
 
   function handleAddTask(parentId: string) {
+    console.log({ parentId });
     setItems((items) => {
       return [
         ...items,
@@ -112,18 +175,53 @@ export default function Board() {
   function handleDragEnd(event: DragEndEvent) {
     const { over, active } = event;
 
-    if (over) {
-      setItems((oldItems) => {
-        const newItems = structuredClone(oldItems);
+    if (active.data.current?.type === "Column") {
+      setContainers((containers) => {
+        const newContainers = structuredClone(containers);
 
-        const activeItemIndex = oldItems.findIndex(
-          (item) => item.id === active.id
+        const activeContainerIndex = containers.findIndex(
+          (container) => container.id === active.id
         );
 
-        newItems[activeItemIndex].parent = over.id as string;
+        const overContainerIndex = containers.findIndex(
+          (container) => container.id === over?.id
+        );
 
-        return newItems;
+        [
+          newContainers[overContainerIndex],
+          newContainers[activeContainerIndex],
+        ] = [
+          newContainers[activeContainerIndex],
+          newContainers[overContainerIndex],
+        ];
+
+        return newContainers;
       });
+    } else {
+      if (over) {
+        setItems((oldItems) => {
+          const newItems = structuredClone(oldItems);
+
+          const activeItemIndex = oldItems.findIndex(
+            (item) => item.id === active.id
+          );
+
+          newItems[activeItemIndex].parent = over.id as string;
+
+          return newItems;
+        });
+      }
+    }
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    const { active } = event;
+
+    if (active.data.current?.type === "Column") {
+      setActiveContainer(active.data.current.container);
+    }
+    if (active.data.current?.type === "Item") {
+      setActiveItem(active.data.current.container);
     }
   }
 }

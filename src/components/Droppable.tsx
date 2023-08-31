@@ -1,8 +1,14 @@
 import { useDroppable } from "@dnd-kit/core";
 
-export function Droppable(props) {
+export type DroppableType = {
+  id: string;
+  title: string | null;
+  children: (JSX.Element | undefined)[] | JSX.Element;
+};
+
+export function Droppable({ id, title, children }: DroppableType) {
   const { isOver, setNodeRef } = useDroppable({
-    id: props.id,
+    id: id,
   });
   const style = {
     color: isOver ? "green" : undefined,
@@ -12,9 +18,15 @@ export function Droppable(props) {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex flex-col space-y-2 min-h-[300px] bg-slate-400 p-4 rounded-lg"
+      className="flex flex-col space-y-2 min-h-[300px] h-fit min-w-[200px] bg-slate-400 p-4 rounded-lg transition-all"
     >
-      {props.children}
+      <input
+        style={{ all: "unset" }}
+        defaultValue={title ? title : "Add title"}
+        className={`my-2 w-fit ${!title && "text-gray-600"}`}
+      />
+
+      {children}
     </div>
   );
 }

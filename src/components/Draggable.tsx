@@ -1,8 +1,11 @@
 import { useDraggable } from "@dnd-kit/core";
+import { DroppableType } from "./Droppable";
 
-export function Draggable(props) {
+type DraggableType = Omit<DroppableType, 'title'>
+
+export function Draggable({ id, children }: DraggableType) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: props.id,
+    id: id,
   });
   const style = transform
     ? {
@@ -18,7 +21,7 @@ export function Draggable(props) {
       {...attributes}
       className="flex w-full min-h-[100px] p-4 bg-slate-300 rounded-lg"
     >
-      {props.children}
+      {children}
     </div>
   );
 }

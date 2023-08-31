@@ -2,6 +2,7 @@ import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { useState } from "react";
 import { Draggable } from "./Draggable";
 import { Droppable } from "./Droppable";
+import AddIcon from "../Icons/AddIcon";
 
 type ContainerType = {
   id: string;
@@ -14,34 +15,38 @@ type ItemType = {
   title: string | null;
 };
 
+// const mockContainers = [
+//   { id: crypto.randomUUID(), title: "pingo" },
+//   { id: crypto.randomUUID(), title: "pingo" },
+//   { id: crypto.randomUUID(), title: "pingo" },
+// ];
+
+// const mockItems = [
+//   {
+//     parent: mockContainers[0].id,
+//     id: crypto.randomUUID(),
+//     title: "Drag me",
+//   },
+//   {
+//     parent: mockContainers[1].id,
+//     id: crypto.randomUUID(),
+//     title: "Drag me 2",
+//   },
+//   {
+//     parent: mockContainers[2].id,
+//     id: crypto.randomUUID(),
+//     title: "Drag me 3",
+//   },
+// ];
+
 export default function Board() {
-  const [containers, setContainers] = useState<ContainerType[]>([
-    { id: crypto.randomUUID(), title: "pingo" },
-    { id: crypto.randomUUID(), title: "pingo" },
-    { id: crypto.randomUUID(), title: "pingo" },
-  ]);
-  const [items, setItems] = useState<ItemType[]>([
-    {
-      parent: containers[0].id,
-      id: crypto.randomUUID(),
-      title: "Drag me",
-    },
-    {
-      parent: containers[1].id,
-      id: crypto.randomUUID(),
-      title: "Drag me 2",
-    },
-    {
-      parent: containers[2].id,
-      id: crypto.randomUUID(),
-      title: "Drag me 3",
-    },
-  ]);
+  const [containers, setContainers] = useState<ContainerType[]>([]);
+  const [items, setItems] = useState<ItemType[]>([]);
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="grid grid-flow-col w-full space-x-8">
-        {containers.map(({ id: parentId, title }) => (
+        {containers?.map(({ id: parentId, title }) => (
           <Droppable
             handleAddTask={() => handleAddTask(parentId)}
             handleColumnNameChange={handleColumnNameChange}
@@ -49,25 +54,27 @@ export default function Board() {
             key={parentId}
             id={parentId}
           >
-            {items.map((item) => {
-              if (item.parent === parentId) {
-                return (
-                  <Draggable id={item.id}>
-                    <div className="flex flex-col">
-                      <p className="text-[8px] text-gray-500">{item.id}</p>
-                      <p>{item.title}</p>
-                    </div>
-                  </Draggable>
-                );
-              }
-            })}
+            {items &&
+              items?.map((item) => {
+                if (item.parent === parentId) {
+                  return (
+                    <Draggable id={item.id}>
+                      <div className="flex flex-col">
+                        <p className="text-[8px] text-gray-500">{item.id}</p>
+                        <p>{item.title}</p>
+                      </div>
+                    </Draggable>
+                  );
+                }
+              })}
           </Droppable>
         ))}
         <button
           onClick={handleAddColumn}
-          className="flex flex-col space-y-2 h-20 bg-slate-400 p-4 rounded-lg"
+          className="flex space-x-2 h-fit bg-slate-400 p-4 rounded-lg w-fit"
         >
-          Add column
+          <AddIcon className="h-6 w-6 fill-none stroke-black stroke-1" />
+          <p>Add column</p>
         </button>
       </div>
     </DndContext>
@@ -77,11 +84,13 @@ export default function Board() {
     setContainers((containers) => {
       const newContainers = structuredClone(containers);
 
-      const activeContainer = newContainers.findIndex(
+      const activeContainer = newContainers?.findIndex(
         (container) => container.id === containerId
       );
 
-      newContainers[activeContainer].title = newName as string;
+      if (newContainers && activeContainer !== -1) {
+        newContainers[activeContainer].title = newName as string;
+      }
 
       return newContainers;
     });

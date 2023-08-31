@@ -2,7 +2,7 @@ import { useDraggable } from "@dnd-kit/core";
 
 export type DraggableType = {
   id: string;
-  children: (JSX.Element | undefined)[] | JSX.Element;
+  children: (JSX.Element | undefined)[] | JSX.Element | null;
 };
 
 export function Draggable({ id, children }: DraggableType) {

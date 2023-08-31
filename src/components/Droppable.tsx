@@ -4,6 +4,7 @@ import { DraggableType } from "./Draggable";
 type DroppableType = DraggableType & {
   title: string | null;
   handleAddTask: () => void;
+  handleColumnNameChange: (newName: string, id: string) => void;
 };
 
 export function Droppable({
@@ -11,6 +12,7 @@ export function Droppable({
   title,
   children,
   handleAddTask,
+  handleColumnNameChange,
 }: DroppableType) {
   const { isOver, setNodeRef } = useDroppable({
     id: id,
@@ -25,7 +27,9 @@ export function Droppable({
       style={style}
       className="flex flex-col space-y-2 min-h-[300px] h-fit min-w-[200px] bg-slate-400 p-4 rounded-lg transition-all"
     >
+      <p className="text-[8px] text-gray-500">{id}</p>
       <input
+        onChange={(e) => handleColumnNameChange(e.target.value, id)}
         style={{ all: "unset" }}
         defaultValue={title ? title : "Add title"}
         className={`my-2 w-fit ${!title && "text-gray-600"}`}

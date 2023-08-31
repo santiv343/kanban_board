@@ -16,31 +16,27 @@ type ItemType = {
 
 export default function Board() {
   const [containers, setContainers] = useState<ContainerType[]>([
-    { id: "A", title: "pingo" },
-    { id: "B", title: "pingo" },
-    { id: "C", title: "pingo" },
+    { id: crypto.randomUUID(), title: "pingo" },
+    { id: crypto.randomUUID(), title: "pingo" },
+    { id: crypto.randomUUID(), title: "pingo" },
   ]);
   const [items, setItems] = useState<ItemType[]>([
     {
-      parent: "A",
+      parent: containers[0].id,
       id: crypto.randomUUID(),
       title: "Drag me",
     },
     {
-      parent: "B",
+      parent: containers[1].id,
       id: crypto.randomUUID(),
       title: "Drag me 2",
     },
     {
-      parent: "C",
+      parent: containers[2].id,
       id: crypto.randomUUID(),
       title: "Drag me 3",
     },
   ]);
-
-  const addColumn = () => {
-    setContainers([...containers, { id: crypto.randomUUID(), title: null }]);
-  };
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
@@ -48,6 +44,7 @@ export default function Board() {
         {containers.map(({ id: parentId, title }) => (
           <Droppable
             handleAddTask={() => handleAddTask(parentId)}
+            handleColumnNameChange={handleColumnNameChange}
             title={title}
             key={parentId}
             id={parentId}
@@ -67,7 +64,7 @@ export default function Board() {
           </Droppable>
         ))}
         <button
-          onClick={addColumn}
+          onClick={handleAddColumn}
           className="flex flex-col space-y-2 h-20 bg-slate-400 p-4 rounded-lg"
         >
           Add column
@@ -75,6 +72,24 @@ export default function Board() {
       </div>
     </DndContext>
   );
+
+  function handleColumnNameChange(newName: string, containerId: string) {
+    setContainers((containers) => {
+      const newContainers = structuredClone(containers);
+
+      const activeContainer = newContainers.findIndex(
+        (container) => container.id === containerId
+      );
+
+      newContainers[activeContainer].title = newName as string;
+
+      return newContainers;
+    });
+  }
+
+  function handleAddColumn() {
+    setContainers([...containers, { id: crypto.randomUUID(), title: null }]);
+  }
 
   function handleAddTask(parentId: string) {
     setItems((items) => {

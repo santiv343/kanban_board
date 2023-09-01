@@ -55,14 +55,16 @@ export default function Board() {
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 150,
-      tolerance: 5,
+      // delay: 150,
+      // tolerance: 5,
+      distance: 10,
     },
   });
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
-      delay: 150,
-      tolerance: 5,
+      // delay: 150,
+      // tolerance: 5,
+      distance: 10,
     },
   });
 
@@ -117,6 +119,7 @@ export default function Board() {
                       if (item.parent === activeContainer.id) {
                         return (
                           <ColumnItem
+                            key={item.id}
                             handleItemDelete={handleItemDelete}
                             item={item}
                           />

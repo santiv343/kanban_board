@@ -3,8 +3,12 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ColumnItem } from "./ColumnItem";
 import { Column } from "./Column";
 import AddIcon from "../Icons/AddIcon";
@@ -47,21 +51,65 @@ export type ItemType = {
 // ];
 
 export default function Board() {
-  const [containers, setContainers] = useState<ContainerType[]>([]);
+  const [containers, setContainers] = useState<ContainerType[]>(
+    JSON.parse(localStorage.getItem("user_containers") ?? "[]")
+  );
   const containersId = useMemo(
     () => containers.map((containers) => containers.id),
     [containers]
   );
-  const [items, setItems] = useState<ItemType[]>([]);
+  const [items, setItems] = useState<ItemType[]>(
+    JSON.parse(localStorage.getItem("user_items") ?? "[]")
+  );
   const itemsId = useMemo(() => items.map((items) => items.id), [items]);
+
+  // useEffect(() => {
+  //   const containers = ;
+  //   const items = localStorage.getItem("user_items");
+
+  //   if (items) {
+  //     setItems(JSON.parse(items));
+  //   }
+
+  //   if (containers) {
+  //     setContainers(JSON.parse(containers));
+  //   }
+  // }, []);
+
+  useEffect(() => {
+    if (items.length > 0)
+      localStorage.setItem("user_items", JSON.stringify(items));
+  }, [items]);
+
+  useEffect(() => {
+    if (containers.length > 0)
+      localStorage.setItem("user_containers", JSON.stringify(containers));
+  }, [containers]);
 
   const [activeContainer, setActiveContainer] = useState<ContainerType | null>(
     null
   );
   const [activeItem, setActiveItem] = useState<ItemType | null>(null);
 
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 150,
+      tolerance: 5,
+    },
+  });
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      delay: 150,
+      tolerance: 5,
+    },
+  });
+
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={useSensors(touchSensor, mouseSensor)}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="grid grid-flow-col space-x-8">
         <SortableContext items={containersId}>
           {containers?.map((container) => (
@@ -76,7 +124,7 @@ export default function Board() {
                 items?.map((item) => {
                   if (item.parent === container.id) {
                     return (
-                      <ColumnItem item={item}>
+                      <ColumnItem key={item.id} item={item}>
                         <div className="flex flex-col">
                           <p>{item.title}</p>
                           <p className="text-[8px] text-gray-500 mt-auto">

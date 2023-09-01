@@ -41,13 +41,16 @@ export function ColumnItem({ handleItemDelete, item }: ColumnItemType) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`flex flex-col w-full min-h-[100px] bg-slate-300 rounded-lg ${
+      className={`flex flex-col w-full min-h-[100px] bg-slate-300 rounded-lg group ${
         isActive ? "shadow-2xl" : ""
       } ${isDragging ? "opacity-50 border-white border" : ""}`}
     >
       <div className="flex justify-between items-center rounded-t-lg p-3">
         <h6>{title}</h6>
-        <button onClick={() => handleItemDelete(id)}>
+        <button
+          onClick={() => handleItemDelete(id)}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <DeleteIcon className="h-4 w-4 fill-red-700" />
         </button>
       </div>

@@ -1,6 +1,7 @@
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   MouseSensor,
@@ -52,8 +53,6 @@ export default function Board() {
   );
   const [activeItem, setActiveItem] = useState<ItemType | null>(null);
 
-  console.log({ activeContainer, activeItem });
-
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
       delay: 150,
@@ -72,6 +71,7 @@ export default function Board() {
       sensors={useSensors(touchSensor, mouseSensor)}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
     >
       <div className="grid grid-flow-col space-x-8">
         <SortableContext items={containersId}>
@@ -155,7 +155,6 @@ export default function Board() {
   }
 
   function handleColumnDelete(containerId: string) {
-    console.log({ containerId });
     setContainers((containers) => {
       return containers.filter((container) => container.id !== containerId);
     });
@@ -194,9 +193,11 @@ export default function Board() {
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    setActiveContainer(null);
+    setActiveItem(null);
+
     const { over, active } = event;
 
-    console.log({ over, active });
     if (!over) return;
 
     if (active.data.current?.type === "Column") {
@@ -221,7 +222,18 @@ export default function Board() {
 
         return newContainers;
       });
-    } else if (active.data.current?.type === "Item") {
+    }
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { over, active } = event;
+
+    if (!over) return;
+
+    const isActiveAnItem = active.data.current?.type === "Item";
+    const isOverAnTask = over.data.current?.type === "Item";
+
+    if (isActiveAnItem && isOverAnTask) {
       setItems((oldItems) => {
         const newItems = structuredClone(oldItems);
 
@@ -233,11 +245,12 @@ export default function Board() {
           (item) => item.id === over?.id
         );
 
-        if (newItems[activeItemIndex].parent !== over.id) {
-          newItems[activeItemIndex].parent = over.id as string;
+        if (
+          newItems[activeItemIndex].parent !== over.data.current?.item.parent
+        ) {
+          newItems[activeItemIndex].parent = over.data.current?.item
+            .parent as string;
         }
-
-        console.log({ activeItemIndex, overItemIndex });
 
         [newItems[overItemIndex], newItems[activeItemIndex]] = [
           newItems[activeItemIndex],
@@ -251,8 +264,6 @@ export default function Board() {
 
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
-
-    console.log({ active });
 
     if (active.data.current?.type === "Column") {
       setActiveContainer(active.data.current.container);

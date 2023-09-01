@@ -232,8 +232,9 @@ export default function Board() {
 
     const isActiveAnItem = active.data.current?.type === "Item";
     const isOverAnTask = over.data.current?.type === "Item";
+    const isOverAContainer = over.data.current?.type === "Column";
 
-    if (isActiveAnItem && isOverAnTask) {
+    if (isActiveAnItem) {
       setItems((oldItems) => {
         const newItems = structuredClone(oldItems);
 
@@ -245,17 +246,31 @@ export default function Board() {
           (item) => item.id === over?.id
         );
 
-        if (
-          newItems[activeItemIndex].parent !== over.data.current?.item.parent
-        ) {
-          newItems[activeItemIndex].parent = over.data.current?.item
-            .parent as string;
-        }
+        if (isOverAnTask) {
+          if (
+            newItems[activeItemIndex].parent !== over.data.current?.item.parent
+          ) {
+            newItems[activeItemIndex].parent = over.data.current?.item
+              .parent as string;
+          }
 
-        [newItems[overItemIndex], newItems[activeItemIndex]] = [
-          newItems[activeItemIndex],
-          newItems[overItemIndex],
-        ];
+          [newItems[overItemIndex], newItems[activeItemIndex]] = [
+            newItems[activeItemIndex],
+            newItems[overItemIndex],
+          ];
+        } else if (isOverAContainer) {
+          if (
+            newItems[activeItemIndex].parent !== over.data.current?.container.id
+          ) {
+            newItems[activeItemIndex].parent = over.data.current?.container
+              .id as string;
+          }
+
+          // [newItems[overItemIndex], newItems[activeItemIndex]] = [
+          //   newItems[activeItemIndex],
+          //   newItems[overItemIndex],
+          // ];
+        }
 
         return newItems;
       });

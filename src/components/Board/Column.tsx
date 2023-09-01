@@ -69,17 +69,16 @@ export function Column({
         </button>
       </div>
 
-      <div className="flex flex-col space-y-2 justify-center items-center px-2 py-2 ">
+      <div className="flex flex-col space-y-2 items-center px-2 py-2 max-h-[80vh] overflow-y-scroll no-scrollbar">
         {children}
-
-        <button
-          onClick={handleAddTask}
-          className="flex justify-center items-center space-x-2 h-fit bg-slate-400 py-4 rounded-lg w-fit"
-        >
-          <AddIcon className="h-6 w-6 fill-none stroke-black stroke-1" />
-          <p>Add task</p>
-        </button>
       </div>
+      <button
+        onClick={handleAddTask}
+        className="flex justify-center items-center space-x-2 h-fit bg-slate-400 py-4 rounded-lg w-full"
+      >
+        <AddIcon className="h-6 w-6 fill-none stroke-black stroke-1" />
+        <p>Add task</p>
+      </button>
 
       <p className="text-[8px] text-gray-500 mt-auto">{id}</p>
     </div>

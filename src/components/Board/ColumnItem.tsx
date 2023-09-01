@@ -1,23 +1,24 @@
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import DeleteIcon from "../Icons/DeleteIcon";
 import { ItemType } from "./Board";
 
 type ColumnItemType = {
   item: ItemType;
-  children: (JSX.Element | undefined)[] | JSX.Element | null;
+  handleItemDelete: (itemId: string) => void;
 };
 
-export function ColumnItem({ item, children }: ColumnItemType) {
-  const { id } = item;
+export function ColumnItem({ handleItemDelete, item }: ColumnItemType) {
+  const { id, title } = item;
   const {
     setNodeRef,
     attributes,
     listeners,
     transform,
-    // transition,
+    transition,
     // isOver,
     active,
-    // isDragging,
-  } = useDraggable({
+    isDragging,
+  } = useSortable({
     id: id,
     data: {
       type: "Item",
@@ -27,6 +28,7 @@ export function ColumnItem({ item, children }: ColumnItemType) {
 
   const style = transform
     ? {
+        transition,
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
       }
     : undefined;
@@ -39,11 +41,17 @@ export function ColumnItem({ item, children }: ColumnItemType) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`flex w-full min-h-[100px] p-4 bg-slate-300 rounded-lg ${
+      className={`flex flex-col w-full min-h-[100px] bg-slate-300 rounded-lg ${
         isActive ? "shadow-2xl" : ""
-      }`}
+      } ${isDragging ? "opacity-50 border-white border" : ""}`}
     >
-      {children}
+      <div className="flex justify-between items-center rounded-t-lg p-3">
+        <h6>{title}</h6>
+        <button onClick={() => handleItemDelete(id)}>
+          <DeleteIcon className="h-4 w-4 fill-red-700" />
+        </button>
+      </div>
+      <p className="text-[8px] text-gray-500 mt-auto p-1 ">{id}</p>
     </div>
   );
 }

@@ -26,30 +26,6 @@ export type ItemType = {
   title: string | null;
 };
 
-// const mockContainers = [
-//   { id: crypto.randomUUID(), title: "pingo" },
-//   { id: crypto.randomUUID(), title: "pingo" },
-//   { id: crypto.randomUUID(), title: "pingo" },
-// ];
-
-// const mockItems = [
-//   {
-//     parent: mockContainers[0].id,
-//     id: crypto.randomUUID(),
-//     title: "Drag me",
-//   },
-//   {
-//     parent: mockContainers[1].id,
-//     id: crypto.randomUUID(),
-//     title: "Drag me 2",
-//   },
-//   {
-//     parent: mockContainers[2].id,
-//     id: crypto.randomUUID(),
-//     title: "Drag me 3",
-//   },
-// ];
-
 export default function Board() {
   const [containers, setContainers] = useState<ContainerType[]>(
     JSON.parse(localStorage.getItem("user_containers") ?? "[]")
@@ -63,33 +39,20 @@ export default function Board() {
   );
   const itemsId = useMemo(() => items.map((items) => items.id), [items]);
 
-  // useEffect(() => {
-  //   const containers = ;
-  //   const items = localStorage.getItem("user_items");
-
-  //   if (items) {
-  //     setItems(JSON.parse(items));
-  //   }
-
-  //   if (containers) {
-  //     setContainers(JSON.parse(containers));
-  //   }
-  // }, []);
-
   useEffect(() => {
-    if (items.length > 0)
-      localStorage.setItem("user_items", JSON.stringify(items));
+    localStorage.setItem("user_items", JSON.stringify(items));
   }, [items]);
 
   useEffect(() => {
-    if (containers.length > 0)
-      localStorage.setItem("user_containers", JSON.stringify(containers));
+    localStorage.setItem("user_containers", JSON.stringify(containers));
   }, [containers]);
 
   const [activeContainer, setActiveContainer] = useState<ContainerType | null>(
     null
   );
   const [activeItem, setActiveItem] = useState<ItemType | null>(null);
+
+  console.log({ activeContainer, activeItem });
 
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
@@ -120,21 +83,20 @@ export default function Board() {
               key={container.id}
               container={container}
             >
-              {items &&
-                items?.map((item) => {
-                  if (item.parent === container.id) {
-                    return (
-                      <ColumnItem key={item.id} item={item}>
-                        <div className="flex flex-col">
-                          <p>{item.title}</p>
-                          <p className="text-[8px] text-gray-500 mt-auto">
-                            {item.id}
-                          </p>
-                        </div>
-                      </ColumnItem>
-                    );
-                  }
-                })}
+              <SortableContext items={itemsId}>
+                {items &&
+                  items?.map((item) => {
+                    if (item.parent === container.id) {
+                      return (
+                        <ColumnItem
+                          handleItemDelete={handleItemDelete}
+                          key={item.id}
+                          item={item}
+                        />
+                      );
+                    }
+                  })}
+              </SortableContext>
             </Column>
           ))}
         </SortableContext>
@@ -154,28 +116,20 @@ export default function Board() {
                     items?.map((item) => {
                       if (item.parent === activeContainer.id) {
                         return (
-                          <ColumnItem item={item}>
-                            <div className="flex flex-col">
-                              <p>{item.title}</p>
-                              <p className="text-[8px] text-gray-500 mt-auto">
-                                {item.id}
-                              </p>
-                            </div>
-                          </ColumnItem>
+                          <ColumnItem
+                            handleItemDelete={handleItemDelete}
+                            item={item}
+                          />
                         );
                       }
                     })}
                 </SortableContext>
               </Column>
             ) : activeItem ? (
-              <ColumnItem item={activeItem}>
-                <div className="flex flex-col">
-                  <p>{activeItem.title}</p>
-                  <p className="text-[8px] text-gray-500 mt-auto">
-                    {activeItem.id}
-                  </p>
-                </div>
-              </ColumnItem>
+              <ColumnItem
+                handleItemDelete={handleItemDelete}
+                item={activeItem}
+              />
             ) : null}
           </DragOverlay>,
           document.body
@@ -192,13 +146,21 @@ export default function Board() {
     </DndContext>
   );
 
+  // Handlers
+
+  function handleItemDelete(itemId: string) {
+    setItems((items) => {
+      return items.filter((item) => item.id !== itemId);
+    });
+  }
+
   function handleColumnDelete(containerId: string) {
     console.log({ containerId });
     setContainers((containers) => {
       return containers.filter((container) => container.id !== containerId);
     });
     setItems((items) => {
-      return items.filter((items) => items.parent !== containerId);
+      return items.filter((item) => item.parent !== containerId);
     });
   }
 
@@ -263,11 +225,24 @@ export default function Board() {
       setItems((oldItems) => {
         const newItems = structuredClone(oldItems);
 
-        const activeItemIndex = oldItems.findIndex(
+        const activeItemIndex = newItems.findIndex(
           (item) => item.id === active.id
         );
 
-        newItems[activeItemIndex].parent = over.id as string;
+        const overItemIndex = newItems.findIndex(
+          (item) => item.id === over?.id
+        );
+
+        if (newItems[activeItemIndex].parent !== over.id) {
+          newItems[activeItemIndex].parent = over.id as string;
+        }
+
+        console.log({ activeItemIndex, overItemIndex });
+
+        [newItems[overItemIndex], newItems[activeItemIndex]] = [
+          newItems[activeItemIndex],
+          newItems[overItemIndex],
+        ];
 
         return newItems;
       });
@@ -277,11 +252,13 @@ export default function Board() {
   function handleDragStart(event: DragStartEvent) {
     const { active } = event;
 
+    console.log({ active });
+
     if (active.data.current?.type === "Column") {
       setActiveContainer(active.data.current.container);
     }
     if (active.data.current?.type === "Item") {
-      setActiveItem(active.data.current.container);
+      setActiveItem(active.data.current.item);
     }
   }
 }

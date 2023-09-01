@@ -24,6 +24,7 @@ export function Column({
     attributes,
     listeners,
     transform,
+    transition,
     isOver,
     active,
     isDragging,
@@ -37,6 +38,7 @@ export function Column({
 
   const style = transform
     ? {
+        transition,
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
       }
     : undefined;
@@ -51,12 +53,6 @@ export function Column({
         isOver ? "border-2 border-slate-200" : ""
       } ${isActive ? "shadow-2xl" : ""} ${isDragging ? "opacity-50" : ""}`}
     >
-      {/* <div
-        
-        className="flex w-full justify-center items-center"
-      >
-        <HorizontalDragIcon className="h-8 w-8 stroke-black stroke-1 fill-black" />
-      </div> */}
       <div
         {...attributes}
         {...listeners}
